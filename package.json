@@ -26,11 +26,6 @@
     "opusscript": "^0.1.1",
     "prism-media": "^1.3.5"
   },
-  "overrides": {
-    "prism-media": {
-      "opusscript": "$opusscript"
-    }
-  },
   "engines": {
     "node": ">=18"
   },

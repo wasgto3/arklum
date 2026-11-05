@@ -3,11 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const ROOT = process.cwd();
+
 const UPDATE_SOURCE = {
-  owner: 'wasgto',
+  owner: 'wasgto3',
   repo: 'arklum',
   branch: 'main'
 };
+
 const SYS_DIR = path.join(ROOT, '.arklum_sys');
 const CLONE_DIR = path.join(SYS_DIR, 'update-clone');
 const BACKUP_DIR = path.join(SYS_DIR, 'backups');
