@@ -1,0 +1,176 @@
+.mg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.mg-box {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: var(--pad-card);
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.mg-box .v {
+  font: 800 20px var(--font-heading);
+  color: var(--text);
+}
+.mg-box .l {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+.mg-tree {
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+}
+.mg-cat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--primary);
+  font
+    .mg-role-row2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem; }
+.mg-role-row2.locked { opacity: 0.5; }
+.mg-q { width: 34px; padding: 4px 0; text-align: center; flex-shrink: 0; }-weight: 600;
+  margin-top: 6px;
+}
+.mg-cat-head .mg-actions button {
+  font-size: 0.7rem;
+  padding: 4px 8px;
+}
+.mg-chan {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  cursor: grab;
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  font-size: 0.85rem;
+}
+.mg-chan:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.mg-chan.drop-above {
+  border-top-color: var(--primary);
+}
+.mg-chan.drop-below {
+  border-bottom-color: var(--primary);
+}
+.mg-chan.dragging {
+  opacity: 0.3;
+}
+.mg-drag-clone {
+  position: fixed;
+  z-index: 9999;
+  opacity: 0.85;
+  pointer-events: none;
+  background: var(--bg-card);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.mg-member {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+}
+.mg-member .who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.mg-member img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.mg-pill {
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  margin-left: 4px;
+}
+.mg-role-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0;
+}
+.mg-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  background: var(--glass-bg-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+}
+.mg-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.mg-actions button {
+  font-size: 0.7rem;
+  padding: 5px 9px;
+}
+.mg-expr {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mg-log {
+  background: #0a0a0a;
+  color: #d4d4d4;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 12px;
+  height: 60vh;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  border-radius: var(--radius);
+}
+.mg-perm-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: 8px;
+}
+.mg-scroll {
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+}
+.mg-member { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mg-member .who { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.mg-member .who img { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
+.mg-member .who strong, .mg-member .who small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mg-mem-acts { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.mg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.mg-pill { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mg-more { padding: 3px 9px; font-size: 0.7rem; }
+#mg-ch-perms, #mg-cat-perms { max-height: 260px; overflow-y: auto; overflow-x: hidden; }
+#mg-role-toggles { max-height: 200px; overflow-y: auto; overflow-x: hidden; display: block; }
+#mg-role-member-list { max-height: 180px; overflow-y: auto; }
+.mg-role-row2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem; }
+.mg-role-row2.locked { opacity: 0.55; }
+.mg-q { width: 34px; padding: 4px 0; text-align: center; flex-shrink: 0; opacity: 0.85; }
+.mg-td-left { font: 700 12px var(--font-mono); color: var(--danger); }
+.perm-disabled { opacity: 0.45; cursor: not-allowed !important; }

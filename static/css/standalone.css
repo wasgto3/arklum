@@ -1,0 +1,33 @@
+body.standalone #ns-server-rail,
+body.standalone #ns-rail,
+body.standalone #ns-dock,
+body.standalone #ns-sheet,
+body.standalone #ns-sheet-backdrop {
+  display: none !important;
+}
+body.standalone #ns-main {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+body.standalone #page-root {
+  padding: 0;
+}
+body.standalone .chat-layout {
+  height: calc(100vh - var(--header-height));
+  min-height: 0;
+}
+body.standalone .chat-chans {
+  border-radius: 0;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+}
+body.standalone .chat-main {
+  border-radius: 0;
+  border: none;
+}
+#sa-home {
+  flex-shrink: 0;
+  width: 42px;
+  padding: 0;
+}

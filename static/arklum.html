@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#202020">
+  <title>Arklum</title>
+  <link rel="icon" type="image/png" href="/arklum.png">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/shell.css">
+  <link rel="stylesheet" href="/css/notif.css">
+  <link rel="stylesheet" href="/css/update.css">
+  <link rel="stylesheet" href="/css/loading.css">
+  <link rel="stylesheet" href="/css/plugins.css">
+  <link rel="stylesheet" href="/css/404.css">
+  <link id="google-fonts-link" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <!-- Made by 1KD <strong>[Y&B & NABUA]</strong> -->
+  <!-- PRESET_SCRIPT -->
+</head>
+<body class="theme-dark">
+  <div id="connecting-overlay">
+    <div class="ld-scan"></div>
+    <div class="ld-scene">
+      <div class="ld-tilt">
+        <div class="ld-halo"></div>
+        <div class="ld-flare"></div>
+        <div class="ld-pool"></div>
+        <div class="ld-sway">
+          <div class="ld-float">
+            <svg class="ld-mark" viewBox="0 0 256 440" aria-hidden="true">
+              <defs>
+                <mask id="ld-sil" maskUnits="userSpaceOnUse">
+                  <polygon fill="#fff" points="128,0 0,236.6 128,160"/>
+                  <polygon fill="#fff" points="128,0 128,160 256,236.6"/>
+                  <polygon fill="#fff" points="0,236.6 128,312 128,160"/>
+                  <polygon fill="#fff" points="128,160 128,312 256,236.6"/>
+                  <polygon fill="#fff" points="0,258 128,438 128,333.5"/>
+                  <polygon fill="#fff" points="128,333.5 128,438 256,258"/>
+                </mask>
+                <linearGradient id="ld-gr" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+                  <stop offset=".5" stop-color="#fff" stop-opacity="1"/>
+                  <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <g>
+                <polygon class="p ld-tl" points="128,0 0,236.6 128,160"/>
+                <polygon class="p ld-tr" points="128,0 128,160 256,236.6"/>
+                <polygon class="p ld-ml" points="0,236.6 128,312 128,160"/>
+                <polygon class="p ld-mr" points="128,160 128,312 256,236.6"/>
+              </g>
+              <g class="ld-gbot">
+                <polygon class="p ld-bl" points="0,258 128,438 128,333.5"/>
+                <polygon class="p ld-br" points="128,333.5 128,438 256,258"/>
+              </g>
+              <g mask="url(#ld-sil)" opacity=".9">
+                <rect class="ld-sheen" x="-160" y="-40" width="140" height="520" fill="url(#ld-gr)" style="mix-blend-mode:overlay"/>
+              </g>
+            </svg>
+          </div>
+          <div class="ld-reflection">
+            <div class="ld-flip">
+              <svg class="ld-mark" viewBox="0 0 256 440" aria-hidden="true">
+                <defs>
+                  <mask id="ld-sil2" maskUnits="userSpaceOnUse">
+                    <polygon fill="#fff" points="128,0 0,236.6 128,160"/>
+                    <polygon fill="#fff" points="128,0 128,160 256,236.6"/>
+                    <polygon fill="#fff" points="0,236.6 128,312 128,160"/>
+                    <polygon fill="#fff" points="128,160 128,312 256,236.6"/>
+                    <polygon fill="#fff" points="0,258 128,438 128,333.5"/>
+                    <polygon fill="#fff" points="128,333.5 128,438 256,258"/>
+                  </mask>
+                  <linearGradient id="ld-gr2" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+                    <stop offset=".5" stop-color="#fff" stop-opacity="1"/>
+                    <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <g>
+                  <polygon class="p ld-tl" points="128,0 0,236.6 128,160"/>
+                  <polygon class="p ld-tr" points="128,0 128,160 256,236.6"/>
+                  <polygon class="p ld-ml" points="0,236.6 128,312 128,160"/>
+                  <polygon class="p ld-mr" points="128,160 128,312 256,236.6"/>
+                </g>
+                <g class="ld-gbot">
+                  <polygon class="p ld-bl" points="0,258 128,438 128,333.5"/>
+                  <polygon class="p ld-br" points="128,333.5 128,438 256,258"/>
+                </g>
+                <g mask="url(#ld-sil2)" opacity=".9">
+                  <rect class="ld-sheen" x="-160" y="-40" width="140" height="520" fill="url(#ld-gr2)" style="mix-blend-mode:overlay"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="boot-phase">Connecting</div>
+  </div>
+  <aside id="ns-server-rail"></aside>
+  <aside id="ns-rail"></aside>
+  <main id="ns-main">
+    <div id="ns-topbar">
+      <img id="headerLeftImgSlot" alt="" style="display:none;">
+      <div id="ns-title" class="ns-title"></div>
+      <div id="ns-actions" class="ns-actions"></div>
+      <img id="headerRightImgSlot" alt="" style="display:none;">
+    </div>
+    <div id="page-root"></div>
+  </main>
+  <nav id="ns-dock"></nav>
+  <div id="ns-sheet"></div>
+  <div id="ns-sheet-backdrop"></div>
+  <div id="msg-popup" class="msg-popup"></div> 
+  <div id="mention-popup" class="mention-popup"></div>
+  <div id="emoji-picker" class="emoji-picker"></div>
+  <div id="profile-popup" class="profile-popup"></div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/core/icons.js"></script>
+  <script src="/core/util.js"></script>
+  <script src="/core/state.js"></script>
+  <script src="/core/router.js"></script>
+  <script src="/core/theme.js"></script>
+  <script src="/core/session.js"></script>
+  <script src="/core/phase.js"></script>
+  <script src="/shell/shell.js"></script>
+  <script src="/shell/notif.js"></script>
+  <script src="/core/friendly.js"></script>
+  <script src="/shell/update.js"></script>
+  <script src="/shell/voice.js"></script>
+  <script src="/shell/features.js"></script>
+  <script src="/pages/login.js"></script>
+  <script src="/pages/home.js"></script>
+  <script src="/pages/servers.js"></script>
+  <script src="/core/emoji-data.js"></script>
+  <script src="/core/markdown.js"></script>
+  <script src="/core/lightbox.js"></script>
+  <script src="/core/fileview.js"></script>
+  <script src="/core/player.js"></script>
+  <script src="/pages/chat.js"></script>
+  <script src="/pages/management.js"></script>
+  <script src="/pages/settings.js"></script>
+  <script src="/pages/bot.js"></script>
+  <script src="/pages/utility.js"></script>
+  <script src="/pages/plugins.js"></script>
+  <script src="/pages/status.js"></script>
+  <script src="/pages/plugins.js"></script>
+  <script src="/pages/404.js"></script>
+</body>
+</html>

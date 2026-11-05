@@ -1,0 +1,75 @@
+:root {
+  --primary: #e8e8e8;
+  --on-primary: #1c1c1c;
+  --primary-soft: #cfcfcf;
+  --primary-deep: #bdbdbd;
+  --primary-darker: #8f8f8f;
+  --accent: #e8e8e8;
+  --danger: #d98c8c;
+  --warning: #d9b380;
+  --success: #9ccb9c;
+  --info: #a9c4d4;
+  --text: #ececec;
+  --text-soft: #d6d6d6;
+  --text-muted: #9a9a9a;
+  --bg-deep: #202020;
+  --bg-panel: #242424;
+  --bg-card: #282828;
+  --bg-raise: rgba(255, 255, 255, 0.05);
+  --glass-bg: rgba(40, 40, 40, 0.72);
+  --glass-bg-light: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --blur: 14px;
+  --vibrancy: 120%;
+  --dispersion: 0px;
+  --animation-speed: 1;
+  --animation-easing: ease;
+  --font: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Inter', system-ui, sans-serif;
+  --font-fallback: system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
+  --header-height: 56px;
+  --dock-h: 76px;
+  --rail-w: 68px;
+  --server-rail-w: 64px;
+  --safe-bottom: env(safe-area-inset-bottom);
+  --pad-card: 16px;
+  --gap-ui: 14px;
+  --bg-image: none;
+  --bg-overlay: transparent;
+  --chat-bg: transparent;
+  --chat-text: inherit;
+  --chat-opacity: 1;
+  --chat-blur: 0px;
+  --chat-glow: 0px;
+}
+body.theme-oled {
+  --bg-deep: #000000;
+  --bg-panel: #000000;
+  --bg-card: #0a0a0a;
+  --glass-bg: rgba(0, 0, 0, 0.85);
+  --glass-bg-light: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+body.theme-light {
+  --primary: #1c1c1c;
+  --on-primary: #f5f5f5;
+  --text: #1c1c1c;
+  --text-soft: #2e2e2e;
+  --text-muted: #6f6f6f;
+  --bg-deep: #efefef;
+  --bg-panel: #f5f5f5;
+  --bg-card: #ffffff;
+  --bg-raise: rgba(0, 0, 0, 0.04);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-bg-light: rgba(0, 0, 0, 0.04);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+body.density-compact {
+  --pad-card: 10px;
+  --gap-ui: 8px;
+}

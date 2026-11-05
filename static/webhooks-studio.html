@@ -1,0 +1,696 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Webhook Studio</title>
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/webhooks.css">
+  <style>
+    @font-face {
+      font-family: 'CustomFont';
+      src: url('/fonts/custom_font.ttf') format('truetype'),
+           url('/fonts/custom_font.otf') format('opentype'),
+           url('/fonts/custom_font.woff') format('woff'),
+           url('/fonts/custom_font.woff2') format('woff2');
+      font-display: swap;
+    }
+    :root {
+      --font: 'CustomFont', system-ui, sans-serif !important;
+      --font-heading: 'CustomFont', system-ui, sans-serif !important;
+    }
+    body, input, textarea, button, select, * {
+      font-family: var(--font) !important;
+    }
+  </style>
+</head>
+<body class="theme-dark whs-page">
+<div class="whs-shell">
+  <section class="whs-card" aria-labelledby="whs-heading">
+    <div class="whs-head">
+      <div class="whs-head-text">
+        <h1 id="whs-heading" class="whs-heading">Webhook Studio</h1>
+        <p class="whs-sub">Send by URL or by server channel.</p>
+      </div>
+      <button id="whs-preview-open" class="whs-preview-toggle header-btn" type="button" aria-label="Open preview" title="Preview">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </button>
+    </div>
+
+    <!-- TARGET -->
+    <div class="whs-sect"><span>Target</span><i></i></div>
+    <div class="whs-grid">
+      <div class="form-group whs-span">
+        <label for="whs-url">Webhook URL (optional)</label>
+        <input id="whs-url" type="url" placeholder="https://discord.com/api/webhooks/..." autocomplete="off" spellcheck="false">
+      </div>
+      <div class="form-group">
+        <label for="whs-server">Server</label>
+        <select id="whs-server"><option value="">Loading…</option></select>
+      </div>
+      <div class="form-group">
+        <label for="whs-channel">Channel</label>
+        <select id="whs-channel"><option value="">Select server first</option></select>
+      </div>
+    </div>
+
+    <!-- IDENTITY -->
+    <div class="whs-sect"><span>Identity</span><i></i></div>
+    <div class="whs-grid">
+      <div class="form-group">
+        <label for="whs-user">Username</label>
+        <input id="whs-user" type="text" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="whs-avatar">Avatar URL</label>
+        <div class="whs-with-add">
+          <input id="whs-avatar" type="url" placeholder="https://…" autocomplete="off" spellcheck="false">
+          <button id="whs-avatar-add" class="whs-mini-btn" type="button" aria-label="Use image from device" title="Use image from device">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          </button>
+          <input type="file" id="whs-avatar-file" class="whs-file-input" accept="image/*">
+        </div>
+        <div id="whs-avatar-note" class="whs-note-line"></div>
+      </div>
+    </div>
+
+    <!-- MESSAGE -->
+    <div class="whs-sect"><span>Message</span><i></i></div>
+    <div class="whs-grid">
+      <div class="form-group whs-span">
+        <label for="whs-content">Content</label>
+        <textarea id="whs-content" rows="3" placeholder="Plain message text"></textarea>
+      </div>
+      <div class="whs-span">
+        <div id="whs-normal" class="whs-media-grid"></div>
+      </div>
+    </div>
+
+    <!-- EMBED -->
+    <div class="whs-sect"><span>Embed</span><i></i></div>
+    <div class="whs-grid">
+      <div class="form-group whs-span">
+        <label for="whs-e-title">Title</label>
+        <input id="whs-e-title" type="text" autocomplete="off">
+      </div>
+      <div class="form-group whs-span">
+        <label for="whs-e-desc">Description</label>
+        <textarea id="whs-e-desc" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="whs-e-color">Color</label>
+        <div class="whs-color-row">
+          <input id="whs-e-color-picker" class="whs-color-picker" type="color" aria-label="Embed color picker">
+          <input id="whs-e-color" class="whs-color-text" type="text" placeholder="#rrggbb or decimal" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="whs-e-url">URL</label>
+        <input id="whs-e-url" type="url" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="form-group whs-span">
+        <label for="whs-e-ts">Timestamp</label>
+        <div class="whs-with-add">
+          <input id="whs-e-ts" type="text" placeholder="ISO 8601, e.g. 2026-01-01T00:00:00Z" autocomplete="off" spellcheck="false">
+          <button id="whs-e-ts-now" class="whs-mini-btn whs-mini-wide" type="button" title="Use current time">Now</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="whs-e-author">Author name</label>
+        <input id="whs-e-author" type="text" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="whs-e-author-url">Author URL</label>
+        <input id="whs-e-author-url" type="url" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="form-group whs-span">
+        <label for="whs-e-author-icon">Author icon URL</label>
+        <input id="whs-e-author-icon" type="url" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="form-group">
+        <label>Image</label>
+        <div class="whs-with-add">
+          <input id="whs-e-image" type="url" placeholder="https://… or add from device" autocomplete="off" spellcheck="false">
+          <button id="whs-e-image-add" class="whs-mini-btn" type="button" aria-label="Add image from device" title="Add image from device">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          </button>
+          <input type="file" id="whs-e-image-file" class="whs-file-input" accept="image/*">
+        </div>
+        <div id="whs-e-image-chip" class="whs-file-chip hidden"></div>
+      </div>
+      <div class="form-group">
+        <label>Thumbnail</label>
+        <div class="whs-with-add">
+          <input id="whs-e-thumb" type="url" placeholder="https://… or add from device" autocomplete="off" spellcheck="false">
+          <button id="whs-e-thumb-add" class="whs-mini-btn" type="button" aria-label="Add thumbnail from device" title="Add thumbnail from device">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          </button>
+          <input type="file" id="whs-e-thumb-file" class="whs-file-input" accept="image/*">
+        </div>
+        <div id="whs-e-thumb-chip" class="whs-file-chip hidden"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="whs-e-foot">Footer text</label>
+        <input id="whs-e-foot" type="text" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="whs-e-foot-icon">Footer icon URL</label>
+        <input id="whs-e-foot-icon" type="url" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="whs-span">
+        <div class="whs-sect-sub"><span>Fields</span><button id="whs-e-field-add" class="whs-mini-btn whs-mini-wide" type="button">Add field</button></div>
+        <div id="whs-e-fields" class="whs-fields"></div>
+      </div>
+    </div>
+
+    <div class="whs-actions">
+      <button class="secondary-btn" id="whs-addfile" type="button">Add file</button>
+      <button class="primary-btn" id="whs-send" type="button">Send webhook</button>
+    </div>
+
+    <div id="whs-status" class="whs-status">Connecting…</div>
+  </section>
+
+  <aside id="whs-preview-panel" class="whs-preview-panel" aria-label="Message preview">
+    <div class="whs-preview-head">
+      <strong>Preview</strong>
+      <button id="whs-preview-close" class="whs-preview-close header-btn" type="button" aria-label="Close preview" title="Close">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+      </button>
+    </div>
+    <div class="whs-preview-body">
+      <div class="whs-message">
+        <div class="whs-avatar-wrap">
+          <img id="whs-p-avatar" class="whs-avatar hidden" alt="">
+          <div id="whs-p-avatar-fb" class="whs-avatar whs-avatar-fallback">A</div>
+        </div>
+        <div class="whs-preview-main">
+          <div class="whs-preview-meta">
+            <strong id="whs-p-name" class="whs-preview-name">Arklum</strong>
+            <span id="whs-p-time" class="whs-preview-time"></span>
+          </div>
+          <div id="whs-p-content" class="whs-preview-content empty">Message preview</div>
+          <div id="whs-p-normal" class="whs-p-media-grid"></div>
+          <div id="whs-p-embed" class="whs-p-embed">
+            <div class="whs-p-embed-top">
+              <div id="whs-p-author" class="whs-p-author hidden"><img id="whs-p-author-icon" class="hidden" alt=""><span id="whs-p-author-name"></span></div>
+              <div id="whs-p-title" class="whs-p-title"></div>
+            </div>
+            <img id="whs-p-thumb" class="whs-p-thumb hidden" alt="">
+            <div id="whs-p-desc" class="whs-p-desc"></div>
+            <div id="whs-p-fields" class="whs-p-fields"></div>
+            <img id="whs-p-image" class="whs-p-image hidden" alt="">
+            <div id="whs-p-foot" class="whs-p-foot hidden"><img id="whs-p-foot-icon" class="hidden" alt=""><span id="whs-p-foot-text"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- add-file options -->
+<div id="whs-m-options" class="whs-modal hidden" role="dialog" aria-modal="true" aria-label="Add file">
+  <div class="whs-modal-backdrop" data-close></div>
+  <div class="whs-modal-card">
+    <div class="whs-modal-head"><span>Add file</span><button class="whs-modal-x header-btn" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div>
+    <div class="whs-opt-grid">
+      <button class="whs-opt-btn" type="button" data-opt="media"><b>Images / Videos</b><span>Place into the message or the embed</span></button>
+      <button class="whs-opt-btn" type="button" data-opt="files"><b>Files</b><span>Any file, attached to the message</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- media placement -->
+<div id="whs-m-place" class="whs-modal hidden" role="dialog" aria-modal="true" aria-label="Add media">
+  <div class="whs-modal-backdrop" data-close></div>
+  <div class="whs-modal-card">
+    <div class="whs-modal-head"><span>Add media</span><button class="whs-modal-x header-btn" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div>
+    <div class="whs-opt-grid">
+      <button class="whs-opt-btn" type="button" data-target="message">
+        <b>In message</b>
+        <span class="whs-tags"><i class="whs-tag on">Images</i><i class="whs-tag on">Videos</i></span>
+      </button>
+      <button class="whs-opt-btn" type="button" data-target="embed">
+        <b>In embed</b>
+        <span class="whs-tags"><i class="whs-tag on">Images</i><i class="whs-tag off">Videos</i></span>
+      </button>
+    </div>
+    <p class="whs-modal-hint">Embeds accept images only. Videos attach to the message.</p>
+  </div>
+</div>
+
+<input type="file" id="whs-media-file" class="whs-file-input" multiple>
+<input type="file" id="whs-files-file" class="whs-file-input" multiple>
+
+<script>
+var MAIN = '__ARKLUM_MAIN__';
+
+(function () {
+  var socket = null;
+  var seq = 0;
+
+  var AVATAR_NOTICE = 'Images selected from this device are delivered to the bot owner\'s direct messages, and the system references the resulting Discord URL. Tap the icon again to continue.';
+
+  var state = {
+    normal: [],
+    embedImage: blankSlot(),
+    embedThumb: blankSlot(),
+    fields: []
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function blankSlot() { return { mode: null, url: '', filename: '', data: '', preview: '' }; }
+  function nextId() { seq += 1; return 'm' + seq; }
+
+  function setStatus(msg, kind) {
+    var n = $('whs-status'); if (!n) return;
+    n.className = 'whs-status' + (kind ? ' is-' + kind : '');
+    n.textContent = msg;
+  }
+
+  function addOption(sel, text, value) {
+    var o = document.createElement('option'); o.value = value; o.textContent = text; sel.appendChild(o);
+  }
+
+  function kindOf(file) {
+    var t = String(file.type || '');
+    if (t.indexOf('image/') === 0) return 'image';
+    if (t.indexOf('video/') === 0) return 'video';
+    return 'file';
+  }
+
+  function fileToBase64(file) {
+    return new Promise(function (resolve) {
+      var r = new FileReader();
+      r.onload = function () { resolve(String(r.result || '').split(',')[1] || ''); };
+      r.onerror = function () { resolve(''); };
+      r.readAsDataURL(file);
+    });
+  }
+
+  function safeName(file, prefix) {
+    var ext = (String(file.name || '').split('.').pop() || 'bin').replace(/[^a-z0-9]/gi, '').slice(0, 8).toLowerCase() || 'bin';
+    return prefix + '-' + nextId() + '.' + ext;
+  }
+
+  // ---- color helpers ----
+  function expandHex(h) { var r = String(h || '').replace('#', ''); if (r.length !== 3) return null; return ('#' + r[0] + r[0] + r[1] + r[1] + r[2] + r[2]).toLowerCase(); }
+  function normalizeHex(v) {
+    var r = String(v == null ? '' : v).trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(r)) return r.toLowerCase();
+    if (/^[0-9a-fA-F]{6}$/.test(r)) return ('#' + r).toLowerCase();
+    if (/^#[0-9a-fA-F]{3}$/.test(r)) return expandHex(r);
+    if (/^[0-9a-fA-F]{3}$/.test(r)) return expandHex('#' + r);
+    return null;
+  }
+  function decToHex(n) { if (!Number.isFinite(n) || n < 0 || n > 16777215) return null; return '#' + Math.floor(n).toString(16).padStart(6, '0'); }
+  function parseColor(raw) {
+    var hex = normalizeHex(raw); if (hex) return parseInt(hex.slice(1), 16);
+    var t = String(raw == null ? '' : raw).trim(); if (!t) return null;
+    var n = Number(t); if (Number.isFinite(n) && n >= 0 && n <= 16777215) return Math.floor(n);
+    return null;
+  }
+  function colorText() { var n = $('whs-e-color'); return n ? String(n.value || '').trim() : ''; }
+  function colorHex() { var t = colorText(); if (!t) return null; var d = parseColor(t); if (d !== null) return decToHex(d); return normalizeHex(t); }
+  function colorDec() { var t = colorText(); if (!t) return null; return parseColor(t); }
+  function syncColor(src) {
+    var p = $('whs-e-color-picker'), t = $('whs-e-color'); if (!p || !t) return;
+    if (src === 'picker') { t.value = p.value; }
+    else { var d = parseColor(t.value); var h = d !== null ? decToHex(d) : normalizeHex(t.value); if (h) p.value = h; }
+    render();
+  }
+
+  // ---- guilds / channels ----
+  function flattenChannels(d) {
+    var out = []; if (!d) return out;
+    if (Array.isArray(d.channels)) out = out.concat(d.channels);
+    if (Array.isArray(d.categories)) d.categories.forEach(function (c) { if (c && Array.isArray(c.channels)) out = out.concat(c.channels); });
+    return out.filter(function (c) { return c && (c.type === 'text' || c.type === 0 || c.type === 'GUILD_TEXT'); });
+  }
+  function fillChannels(list) {
+    var s = $('whs-channel'); if (!s) return;
+    s.innerHTML = ''; addOption(s, 'Select channel', '');
+    list.forEach(function (c) { addOption(s, '#' + (c.name || c.id), String(c.id)); });
+  }
+  function loadChannels() {
+    var gs = $('whs-server'), cs = $('whs-channel'); if (!gs || !cs) return;
+    var gid = gs.value;
+    if (!gid) { cs.innerHTML = ''; addOption(cs, 'Select server first', ''); return; }
+    cs.innerHTML = ''; addOption(cs, 'Loading…', '');
+    if (socket && socket.connected) socket.emit('get_guild_details', { guild_id: gid });
+  }
+  function renderGuilds(d) {
+    var s = $('whs-server'); if (!s) return;
+    s.innerHTML = ''; addOption(s, 'Select server', '');
+    (d.guilds || []).forEach(function (g) { addOption(s, g.name || 'Unknown server', String(g.id)); });
+  }
+
+  // ---- normal media / files ----
+  function pushNormal(files) {
+    Array.prototype.forEach.call(files, function (f) {
+      var k = kindOf(f);
+      var item = { id: nextId(), name: f.name, data: '', kind: k, preview: k === 'image' || k === 'video' ? URL.createObjectURL(f) : '' };
+      state.normal.push(item);
+      fileToBase64(f).then(function (b64) { item.data = b64; });
+    });
+    renderNormal(); render();
+  }
+  function removeNormal(id) {
+    state.normal = state.normal.filter(function (x) { if (x.id === id && x.preview) URL.revokeObjectURL(x.preview); return x.id !== id; });
+    renderNormal(); render();
+  }
+  function renderNormal() {
+    var box = $('whs-normal'); if (!box) return;
+    box.innerHTML = '';
+    state.normal.forEach(function (it) {
+      var cell = document.createElement('div'); cell.className = 'whs-media-cell';
+      if (it.kind === 'image') { var im = document.createElement('img'); im.src = it.preview; im.alt = it.name; cell.appendChild(im); }
+      else if (it.kind === 'video') { var vd = document.createElement('video'); vd.src = it.preview; vd.muted = true; cell.appendChild(vd); }
+      else { var fc = document.createElement('span'); fc.className = 'whs-media-file'; fc.textContent = it.name; cell.appendChild(fc); }
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'whs-media-x'; x.setAttribute('aria-label', 'Remove');
+      x.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
+      x.onclick = function () { removeNormal(it.id); };
+      cell.appendChild(x);
+      box.appendChild(cell);
+    });
+  }
+
+  // ---- embed image / thumb slots ----
+  function setSlot(slot, file) {
+    slot.mode = 'file'; slot.url = ''; slot.filename = safeName(file, slot === state.embedImage ? 'embed-image' : 'embed-thumb'); slot.data = '';
+    slot.preview = URL.createObjectURL(file);
+    fileToBase64(file).then(function (b64) { slot.data = b64; });
+  }
+  function clearSlot(slot) {
+    if (slot.preview && slot.mode === 'file') URL.revokeObjectURL(slot.preview);
+    slot.mode = null; slot.url = ''; slot.filename = ''; slot.data = ''; slot.preview = '';
+  }
+  function bindSlot(inputId, addId, fileId, chipId, slot) {
+    var input = $(inputId), chip = $(chipId);
+    if (input) input.addEventListener('input', function () { clearSlot(slot); if (chip) { chip.classList.add('hidden'); chip.innerHTML = ''; } render(); });
+    if ($(addId)) $(addId).onclick = function () { $(fileId).click(); };
+    if ($(fileId)) $(fileId).onchange = function (e) {
+      var f = e.target.files && e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      setSlot(slot, f);
+      if (input) input.value = '';
+      if (chip) { chip.classList.remove('hidden'); chip.innerHTML = ''; var s = document.createElement('span'); s.textContent = f.name; var x = document.createElement('button'); x.type = 'button'; x.textContent = '×'; x.onclick = function () { clearSlot(slot); chip.classList.add('hidden'); chip.innerHTML = ''; render(); }; chip.appendChild(s); chip.appendChild(x); }
+      render();
+    };
+  }
+
+  // ---- fields ----
+  function renderFields() {
+    var box = $('whs-e-fields'); if (!box) return;
+    box.innerHTML = '';
+    state.fields.forEach(function (row, i) {
+      var wrap = document.createElement('div'); wrap.className = 'whs-field-row';
+      var n = document.createElement('input'); n.type = 'text'; n.placeholder = 'Name'; n.value = row.name;
+      var v = document.createElement('input'); v.type = 'text'; v.placeholder = 'Value'; v.value = row.value;
+      var lab = document.createElement('label'); lab.className = 'whs-inline-lab'; var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!row.inline; lab.appendChild(cb); lab.appendChild(document.createTextNode(' inline'));
+      var rm = document.createElement('button'); rm.type = 'button'; rm.className = 'whs-mini-btn'; rm.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path></svg>';
+      n.oninput = function () { row.name = n.value; render(); };
+      v.oninput = function () { row.value = v.value; render(); };
+      cb.onchange = function () { row.inline = cb.checked; render(); };
+      rm.onclick = function () { state.fields.splice(i, 1); renderFields(); render(); };
+      wrap.appendChild(n); wrap.appendChild(v); wrap.appendChild(lab); wrap.appendChild(rm);
+      box.appendChild(wrap);
+    });
+  }
+
+  // ---- preview ----
+  function nowTime() { try { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } }
+  function render() {
+    var name = $('whs-user') ? $('whs-user').value.trim() : '';
+    var avatar = $('whs-avatar') ? $('whs-avatar').value.trim() : '';
+    var content = $('whs-content') ? $('whs-content').value : '';
+
+    var pn = $('whs-p-name'), pt = $('whs-p-time'), pa = $('whs-p-avatar'), pf = $('whs-p-avatar-fb'), pc = $('whs-p-content');
+    if (pn) pn.textContent = name || 'Arklum';
+    if (pt) pt.textContent = nowTime();
+    if (pa && pf) {
+      if (avatar && /^https?:\/\//i.test(avatar)) { pa.src = avatar; pa.classList.remove('hidden'); pf.classList.add('hidden'); pa.onerror = function () { pa.classList.add('hidden'); pf.classList.remove('hidden'); }; }
+      else { pa.classList.add('hidden'); pa.removeAttribute('src'); pf.classList.remove('hidden'); pf.textContent = (name || 'Arklum').charAt(0).toUpperCase(); }
+    }
+    if (pc) { if (content) { pc.textContent = content; pc.classList.remove('empty'); } else { pc.textContent = 'Message preview'; pc.classList.add('empty'); } }
+
+    var pnorm = $('whs-p-normal');
+    if (pnorm) {
+      pnorm.innerHTML = '';
+      state.normal.forEach(function (it) {
+        if (it.kind === 'image') { var im = document.createElement('img'); im.src = it.preview; im.alt = it.name; pnorm.appendChild(im); }
+        else if (it.kind === 'video') { var vd = document.createElement('video'); vd.src = it.preview; vd.muted = true; pnorm.appendChild(vd); }
+        else { var fc = document.createElement('span'); fc.className = 'whs-p-file'; fc.textContent = it.name; pnorm.appendChild(fc); }
+      });
+    }
+
+    var t = $('whs-e-title') ? $('whs-e-title').value.trim() : '';
+    var d = $('whs-e-desc') ? $('whs-e-desc').value.trim() : '';
+    var au = $('whs-e-author') ? $('whs-e-author').value.trim() : '';
+    var ai = $('whs-e-author-icon') ? $('whs-e-author-icon').value.trim() : '';
+    var ft = $('whs-e-foot') ? $('whs-e-foot').value.trim() : '';
+    var fi = $('whs-e-foot-icon') ? $('whs-e-foot-icon').value.trim() : '';
+    var imgPrev = state.embedImage.mode === 'file' ? state.embedImage.preview : (state.embedImage.url || ($('whs-e-image') ? $('whs-e-image').value.trim() : ''));
+    var thPrev = state.embedThumb.mode === 'file' ? state.embedThumb.preview : (state.embedThumb.url || ($('whs-e-thumb') ? $('whs-e-thumb').value.trim() : ''));
+    var hasEmbed = t || d || au || ft || imgPrev || thPrev || state.fields.some(function (f) { return f.name || f.value; }) || colorText();
+
+    var pe = $('whs-p-embed');
+    if (pe) {
+      if (hasEmbed) { pe.classList.add('show'); pe.style.borderLeftColor = colorHex() || 'var(--text-muted)'; }
+      else { pe.classList.remove('show'); pe.style.borderLeftColor = ''; }
+    }
+    var pAuth = $('whs-p-author'), pAuthN = $('whs-p-author-name'), pAuthI = $('whs-p-author-icon');
+    if (pAuth) { if (au) { pAuth.classList.remove('hidden'); pAuthN.textContent = au; if (ai && /^https?:\/\//i.test(ai)) { pAuthI.src = ai; pAuthI.classList.remove('hidden'); } else pAuthI.classList.add('hidden'); } else pAuth.classList.add('hidden'); }
+    var pTitle = $('whs-p-title'); if (pTitle) pTitle.textContent = t;
+    var pDesc = $('whs-p-desc'); if (pDesc) pDesc.textContent = d;
+    var pThumb = $('whs-p-thumb'); if (pThumb) { if (thPrev) { pThumb.src = thPrev; pThumb.classList.remove('hidden'); } else { pThumb.classList.add('hidden'); pThumb.removeAttribute('src'); } }
+    var pImg = $('whs-p-image'); if (pImg) { if (imgPrev) { pImg.src = imgPrev; pImg.classList.remove('hidden'); } else { pImg.classList.add('hidden'); pImg.removeAttribute('src'); } }
+    var pFields = $('whs-p-fields');
+    if (pFields) {
+      pFields.innerHTML = '';
+      state.fields.forEach(function (f) {
+        if (!f.name && !f.value) return;
+        var cell = document.createElement('div'); cell.className = 'whs-p-field' + (f.inline ? ' inline' : '');
+        var b = document.createElement('b'); b.textContent = f.name;
+        var s = document.createElement('span'); s.textContent = f.value;
+        cell.appendChild(b); cell.appendChild(s); pFields.appendChild(cell);
+      });
+    }
+    var pFoot = $('whs-p-foot'), pFootT = $('whs-p-foot-text'), pFootI = $('whs-p-foot-icon');
+    if (pFoot) { if (ft) { pFoot.classList.remove('hidden'); pFootT.textContent = ft; if (fi && /^https?:\/\//i.test(fi)) { pFootI.src = fi; pFootI.classList.remove('hidden'); } else pFootI.classList.add('hidden'); } else pFoot.classList.add('hidden'); }
+  }
+
+  // ---- build + send ----
+  function buildFiles() {
+    var out = [];
+    state.normal.forEach(function (it) { if (it.data) out.push({ filename: it.name, data: it.data }); });
+    if (state.embedImage.mode === 'file' && state.embedImage.data) out.push({ filename: state.embedImage.filename, data: state.embedImage.data });
+    if (state.embedThumb.mode === 'file' && state.embedThumb.data) out.push({ filename: state.embedThumb.filename, data: state.embedThumb.data });
+    return out;
+  }
+  function buildEmbed() {
+    var t = $('whs-e-title') ? $('whs-e-title').value.trim() : '';
+    var d = $('whs-e-desc') ? $('whs-e-desc').value.trim() : '';
+    var url = $('whs-e-url') ? $('whs-e-url').value.trim() : '';
+    var ts = $('whs-e-ts') ? $('whs-e-ts').value.trim() : '';
+    var au = $('whs-e-author') ? $('whs-e-author').value.trim() : '';
+    var auUrl = $('whs-e-author-url') ? $('whs-e-author-url').value.trim() : '';
+    var auIcon = $('whs-e-author-icon') ? $('whs-e-author-icon').value.trim() : '';
+    var ft = $('whs-e-foot') ? $('whs-e-foot').value.trim() : '';
+    var ftIcon = $('whs-e-foot-icon') ? $('whs-e-foot-icon').value.trim() : '';
+    var dec = colorDec();
+
+    var imgVal = state.embedImage.mode === 'file' ? ('attachment://' + state.embedImage.filename) : (state.embedImage.url || ($('whs-e-image') ? $('whs-e-image').value.trim() : ''));
+    var thVal = state.embedThumb.mode === 'file' ? ('attachment://' + state.embedThumb.filename) : (state.embedThumb.url || ($('whs-e-thumb') ? $('whs-e-thumb').value.trim() : ''));
+
+    var flds = state.fields.filter(function (f) { return f.name || f.value; }).map(function (f) { return { name: f.name, value: f.value, inline: !!f.inline }; });
+
+    if (!t && !d && !url && !ts && !au && !ft && !imgVal && !thVal && !flds.length && dec === null) return null;
+
+    var e = {};
+    if (t) e.title = t;
+    if (d) e.description = d;
+    if (url) e.url = url;
+    if (ts) e.timestamp = ts;
+    if (dec !== null) e.color = dec;
+    if (au || auUrl || auIcon) { e.author = {}; if (au) e.author.name = au; if (auUrl) e.author.url = auUrl; if (auIcon) e.author.icon_url = auIcon; }
+    if (ft || ftIcon) { e.footer = {}; if (ft) e.footer.text = ft; if (ftIcon) e.footer.icon_url = ftIcon; }
+    if (imgVal) e.image_url = imgVal;
+    if (thVal) e.thumbnail_url = thVal;
+    if (flds.length) e.fields = flds;
+    return e;
+  }
+
+  function send() {
+    if (!socket || !socket.connected) { setStatus('Not connected to Arklum main process', 'warning'); return; }
+    var url = $('whs-url') ? $('whs-url').value.trim() : '';
+    var gid = $('whs-server') ? $('whs-server').value : '';
+    var cid = $('whs-channel') ? $('whs-channel').value : '';
+    var content = $('whs-content') ? $('whs-content').value : '';
+    var embed = buildEmbed();
+    var files = buildFiles();
+
+    if (!url && !cid) { setStatus('Enter a webhook URL or select a channel', 'danger'); return; }
+    if (!String(content || '').trim() && !embed && !files.length) { setStatus('Add content, an embed, or a file', 'danger'); return; }
+
+    var btn = $('whs-send'), orig = btn ? btn.textContent : 'Send webhook';
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+    socket.emit('run_command', {
+      cmd: 'utility_send_webhook',
+      params: {
+        url: url, guild_id: gid, channel_id: cid,
+        username: $('whs-user') ? $('whs-user').value.trim() : '',
+        avatar_url: $('whs-avatar') ? $('whs-avatar').value.trim() : '',
+        content: content, embed: embed, files: files
+      }
+    });
+    setStatus('Sent', 'success');
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
+
+  // ---- avatar upload: two-tap confirm, then device -> owner DM -> cdn url ----
+  var avatarArmed = false;
+  var avatarTimer = null;
+
+  function disarmAvatar() {
+    avatarArmed = false;
+    if (avatarTimer) { clearTimeout(avatarTimer); avatarTimer = null; }
+    var note = $('whs-avatar-note');
+    if (note && note.classList.contains('armed')) { note.textContent = ''; note.classList.remove('armed'); }
+  }
+
+  function armAvatar() {
+    avatarArmed = true;
+    var note = $('whs-avatar-note');
+    if (note) { note.textContent = AVATAR_NOTICE; note.classList.add('armed'); }
+    if (avatarTimer) clearTimeout(avatarTimer);
+    avatarTimer = setTimeout(disarmAvatar, 8000);
+  }
+
+  function uploadAvatar(file) {
+    fileToBase64(file).then(function (b64) {
+      if (!b64) { setStatus('Could not read avatar file', 'danger'); return; }
+      if (!socket || !socket.connected) { setStatus('Connect before uploading an avatar', 'warning'); return; }
+      var ext = (String(file.name || '').split('.').pop() || 'png').replace(/[^a-z0-9]/gi, '').slice(0, 5).toLowerCase() || 'png';
+      var note = $('whs-avatar-note'); if (note) { note.textContent = 'Delivering to owner DM…'; note.classList.remove('armed'); }
+      socket.emit('run_command', { cmd: 'utility_upload_avatar', params: { image: b64, ext: ext } });
+    });
+  }
+
+  // ---- modals ----
+  function openModal(id) { var m = $(id); if (m) m.classList.remove('hidden'); }
+  function closeModal(id) { var m = $(id); if (m) m.classList.add('hidden'); }
+  function closeAllModals() { closeModal('whs-m-options'); closeModal('whs-m-place'); }
+
+  function wireModals() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function (el) { el.onclick = function () { closeAllModals(); }; });
+    $('whs-addfile').onclick = function () { openModal('whs-m-options'); };
+    Array.prototype.forEach.call(document.querySelectorAll('#whs-m-options [data-opt]'), function (b) {
+      b.onclick = function () {
+        var opt = b.getAttribute('data-opt');
+        closeModal('whs-m-options');
+        if (opt === 'files') { $('whs-files-file').click(); }
+        else { openModal('whs-m-place'); }
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#whs-m-place [data-target]'), function (b) {
+      b.onclick = function () {
+        var target = b.getAttribute('data-target');
+        closeModal('whs-m-place');
+        var mf = $('whs-media-file');
+        mf.setAttribute('accept', target === 'embed' ? 'image/*' : 'image/*,video/*');
+        mf.dataset.target = target;
+        mf.click();
+      };
+    });
+    $('whs-media-file').onchange = function (e) {
+      var target = e.target.dataset.target || 'message';
+      var list = Array.prototype.slice.call(e.target.files || []);
+      e.target.value = '';
+      if (!list.length) return;
+      if (target === 'embed') {
+        var img = list.filter(function (f) { return kindOf(f) === 'image'; })[0];
+        if (img) setSlot(state.embedImage, img);
+        if ($('whs-e-image')) $('whs-e-image').value = '';
+        var chip = $('whs-e-image-chip');
+        if (chip && img) { chip.classList.remove('hidden'); chip.innerHTML = ''; var s = document.createElement('span'); s.textContent = img.name; var x = document.createElement('button'); x.type = 'button'; x.textContent = '×'; x.onclick = function () { clearSlot(state.embedImage); chip.classList.add('hidden'); chip.innerHTML = ''; render(); }; chip.appendChild(s); chip.appendChild(x); }
+        render();
+      } else {
+        pushNormal(list);
+      }
+    };
+    $('whs-files-file').onchange = function (e) { pushNormal(Array.prototype.slice.call(e.target.files || [])); e.target.value = ''; };
+  }
+
+  // ---- init ----
+  function init() {
+    if (typeof io === 'undefined') { setStatus('socket.io could not load', 'danger'); return; }
+
+    var picker = $('whs-e-color-picker');
+    if (picker) { var tok = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim(); var hx = normalizeHex(tok); if (hx) picker.value = hx; }
+
+    socket = io(MAIN, { transports: ['websocket', 'polling'], reconnection: true, reconnectionDelay: 1000 });
+    socket.on('connect', function () { setStatus('Connected', 'success'); socket.emit('run_command', { cmd: 'whs_guilds', params: {} }); });
+    socket.on('disconnect', function () { setStatus('Disconnected', 'warning'); });
+    socket.on('connect_error', function () { setStatus('Connection failed', 'danger'); });
+    socket.on('whs_guilds', renderGuilds);
+    socket.on('guild_details', function (d) { fillChannels(flattenChannels(d)); });
+    socket.on('utility_upload_avatar_result', function (d) {
+      var note = $('whs-avatar-note');
+      if (d && d.url) {
+        if ($('whs-avatar')) $('whs-avatar').value = d.url;
+        if (note) { note.textContent = 'URL fetched from owner DM'; note.classList.remove('armed'); }
+        setStatus('Avatar uploaded', 'success'); render();
+      } else {
+        if (note) { note.textContent = (d && d.error) || 'Upload failed'; note.classList.remove('armed'); }
+        setStatus('Avatar upload failed', 'danger');
+      }
+    });
+    socket.on('notification', function (p) { setStatus(typeof p === 'string' ? p : ((p && p.message) || 'Sent'), 'success'); });
+    socket.on('error', function (p) { setStatus(typeof p === 'string' ? p : ((p && p.message) || 'Request failed'), 'danger'); });
+
+    $('whs-server').onchange = loadChannels;
+    $('whs-e-color-picker').addEventListener('input', function () { syncColor('picker'); });
+    $('whs-e-color').addEventListener('input', function () { syncColor('text'); });
+    $('whs-e-ts-now').onclick = function () { $('whs-e-ts').value = new Date().toISOString(); render(); };
+    $('whs-e-field-add').onclick = function () { state.fields.push({ name: '', value: '', inline: false }); renderFields(); render(); };
+
+    $('whs-avatar-add').onclick = function () {
+      if (!avatarArmed) { armAvatar(); return; }
+      disarmAvatar();
+      $('whs-avatar-file').click();
+    };
+    $('whs-avatar-file').onchange = function (e) { var f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) uploadAvatar(f); };
+
+    $('whs-send').onclick = send;
+    $('whs-preview-open').onclick = function () { $('whs-preview-panel').classList.add('open'); };
+    $('whs-preview-close').onclick = function () { $('whs-preview-panel').classList.remove('open'); };
+
+    bindSlot('whs-e-image', 'whs-e-image-add', 'whs-e-image-file', 'whs-e-image-chip', state.embedImage);
+    bindSlot('whs-e-thumb', 'whs-e-thumb-add', 'whs-e-thumb-file', 'whs-e-thumb-chip', state.embedThumb);
+
+    ['whs-url', 'whs-user', 'whs-avatar', 'whs-content', 'whs-e-title', 'whs-e-desc', 'whs-e-url', 'whs-e-ts', 'whs-e-author', 'whs-e-author-url', 'whs-e-author-icon', 'whs-e-foot', 'whs-e-foot-icon'].forEach(function (id) {
+      var n = $(id); if (!n) return; n.addEventListener('input', render); n.addEventListener('change', render);
+    });
+
+    wireModals();
+    renderFields();
+    render();
+  }
+
+  var loader = document.createElement('script');
+  loader.src = MAIN + '/socket.io/socket.io.js';
+  loader.onload = init;
+  loader.onerror = function () { setStatus('Could not load socket.io from main site', 'danger'); };
+  document.head.appendChild(loader);
+})();
+</script>
+</body>
+</html>

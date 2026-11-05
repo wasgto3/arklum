@@ -1,0 +1,208 @@
+#connecting-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10300;
+  background: var(--bg-deep);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  transition: opacity 0.45s ease, visibility 0.45s ease;
+}
+#connecting-overlay.hidden {
+  display: none;
+}
+#connecting-overlay.boot-done {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.boot-mark {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+.boot-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--text);
+  animation: boot-spin 1s linear infinite;
+}
+.boot-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: var(--text);
+  animation: boot-pulse 1.4s ease-in-out infinite;
+}
+.boot-word {
+  font: 700 15px var(--font-heading);
+  letter-spacing: 6px;
+  color: var(--text);
+  animation: boot-fade 1.2s ease both;
+}
+.boot-phase {
+  font: 600 11px var(--font-mono);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  min-height: 14px;
+}
+.boot-bar {
+  width: 140px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.boot-bar i {
+  display: block;
+  height: 100%;
+  width: 40%;
+  background: var(--text);
+  border-radius: 2px;
+  animation: boot-slide 1.1s ease-in-out infinite;
+}
+#connecting-overlay.boot-fail .boot-ring {
+  border-top-color: var(--danger);
+  animation-duration: 0.4s;
+}
+#connecting-overlay.boot-fail .boot-phase {
+  color: var(--danger);
+}
+@keyframes boot-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes boot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.6); opacity: 0.5; }
+}
+@keyframes boot-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+@keyframes boot-fade {
+  from { opacity: 0; letter-spacing: 10px; }
+  to { opacity: 1; letter-spacing: 6px; }
+}
+.primary-btn {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: none;
+}
+.primary-btn:hover {
+  filter: brightness(0.92);
+}
+.secondary-btn {
+  background: transparent;
+  color: var(--text);
+}
+.secondary-btn:hover {
+  background: var(--bg-raise);
+}
+.danger-btn {
+  background: transparent;
+  border-color: rgba(217, 140, 140, 0.45);
+  color: var(--danger);
+}
+.toggle-switch.active {
+  background: var(--text);
+}
+.toggle-switch.active::after {
+  background: var(--bg-card);
+}
+.tab-btn.active,
+.module-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+.header-btn:hover {
+  background: var(--bg-raise);
+  border-color: var(--glass-border);
+  color: var(--text);
+}
+.nsr-home.active,
+.nsr-srv.active {
+  outline-color: var(--text);
+}
+.nsr-home.active::before,
+.nsr-srv.active::before {
+  background: var(--text);
+}
+.ns-it.active {
+  color: var(--text);
+  background: var(--bg-raise);
+}
+.ns-it.active::before {
+  background: var(--text);
+}
+#ns-dock a.active {
+  color: var(--text);
+}
+#ns-dock a.active .ns-bump {
+  background: var(--bg-panel);
+}
+#ns-dock a.active svg,
+#ns-dock a.active span {
+  color: var(--text);
+}
+.hm-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+}
+.hm-avwrap img {
+  border-color: var(--text);
+}
+.hm-up {
+  background: var(--text);
+  color: var(--bg-card);
+}
+.stat-ic {
+  background: var(--bg-raise) !important;
+  color: var(--text) !important;
+}
+.srv-bn {
+  background: var(--bg-card);
+}
+.sti-av {
+  background: var(--bg-raise);
+  color: var(--text);
+}
+.saved-token-item.active {
+  border-color: var(--text);
+  box-shadow: none;
+}
+.reaction-chip.mine {
+  border-color: var(--text);
+  background: var(--bg-raise);
+}
+.mention,
+.chan-link {
+  background: var(--bg-raise);
+  color: var(--text);
+}
+.perm-btn.allow {
+  background: var(--text);
+  color: var(--bg-card);
+}
+.perm-btn.deny {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+.lg-verify {
+  background: var(--bg-raise);
+  border-color: var(--glass-border);
+}
+.msg-popup-quick span:hover,
+.expression-chip:hover,
+.invite-card:hover {
+  background: var(--bg-raise);
+}

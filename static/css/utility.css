@@ -1,0 +1,39 @@
+.ut-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px;
+  background: var(--bg-raise);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+}
+.ut-row .grow {
+  flex: 1;
+  min-width: 120px;
+}
+.ut-emoji {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--bg-raise);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--text);
+  cursor: pointer;
+}
+.ut-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-raise);
+  overflow: hidden;
+  margin: 8px 0;
+}
+.ut-bar i {
+  display: block;
+  height: 100%;
+  background: var(--text);
+}

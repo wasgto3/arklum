@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 440" width="256" height="440">
+  <polygon points="128,334 128,438 256,258" fill="none" stroke="#6f6f6f" stroke-opacity=".55" stroke-width="4" stroke-dasharray="10 8"/>
+  <g transform="translate(-10 14) rotate(-4 64 150)">
+    <polygon points="128,0 0,236 128,312" fill="#8a8a8a" fill-opacity=".85"/>
+    <polygon points="128,0 128,312 64,274" fill="#5c5c5c" fill-opacity=".7"/>
+  </g>
+  <g transform="translate(12 -10) rotate(5 192 150)">
+    <polygon points="128,0 256,236 128,312" fill="#6f6f6f" fill-opacity=".75"/>
+    <polygon points="128,0 128,312 192,274" fill="#4a4a4a" fill-opacity=".6"/>
+  </g>
+  <g transform="translate(-6 22) rotate(-6 64 340)">
+    <polygon points="0,258 128,438 128,334" fill="#7a7a7a" fill-opacity=".8"/>
+  </g>
+  <polyline points="18,238 70,214 96,246 128,206 160,244 196,212 240,240" fill="none" stroke="#9a9a9a" stroke-width="6" stroke-linecap="round" stroke-opacity=".9"/>
+  <polygon points="210,120 232,132 214,150" fill="#8a8a8a" fill-opacity=".5"/>
+  <polygon points="40,320 58,332 42,344" fill="#6f6f6f" fill-opacity=".45"/>
+  <polygon points="150,60 166,70 152,82" fill="#5c5c5c" fill-opacity=".4"/>
+</svg>

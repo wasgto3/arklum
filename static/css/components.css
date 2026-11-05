@@ -1,0 +1,115 @@
+.header-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-raise);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s var(--animation-easing), color 0.2s var(--animation-easing);
+}
+.header-btn:hover {
+  background: var(--bg-card);
+  color: var(--text);
+}
+.saved-token-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: var(--bg-raise);
+  cursor: pointer;
+  transition: transform 0.15s var(--animation-easing), border-color 0.15s var(--animation-easing);
+  margin-bottom: 8px;
+}
+.saved-token-item:hover {
+  transform: translateY(-1px);
+  border-color: var(--text-muted);
+}
+.saved-token-item.active {
+  border-color: var(--text);
+}
+.sti-av {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #3a3a3a;
+  display: grid;
+  place-items: center;
+  font: 600 13px var(--font);
+  color: var(--text);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.sti-av img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sti-info {
+  flex: 1;
+  min-width: 0;
+}
+.sti-info b {
+  font-size: 13px;
+  display: block;
+  color: var(--text);
+}
+.sti-info small {
+  color: var(--text-muted);
+  font: 600 10px var(--font-mono);
+}
+.sti-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text);
+  flex-shrink: 0;
+}
+.sti-chev {
+  opacity: 0.5;
+  color: var(--text);
+}
+.msg-popup {
+  position: fixed;
+  display: none;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  min-width: 170px;
+  z-index: 9999;
+  padding: 4px;
+}
+.msg-popup-item {
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+.msg-popup-item:hover {
+  background: var(--bg-raise);
+}
+.mention-popup-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.mention-popup-item.active {
+  background: var(--bg-raise);
+}

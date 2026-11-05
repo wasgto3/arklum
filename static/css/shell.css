@@ -1,0 +1,439 @@
+#ns-server-rail {
+position: fixed;
+left: 0;
+top: 0;
+bottom: 0;
+width: var(--server-rail-w);
+background: var(--bg-panel);
+border-right: 1px solid var(--glass-border);
+z-index: 900;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 12px 0;
+gap: 8px;
+overflow-y: auto;
+overflow-x: hidden;
+}
+#ns-server-rail::-webkit-scrollbar {
+width: 0;
+}
+.nsr-logo {
+width: 38px;
+height: 38px;
+border-radius: 12px;
+overflow: hidden;
+margin-bottom: 4px;
+flex-shrink: 0;
+}
+.nsr-logo img {
+width: 100%;
+height: 100%;
+object-fit: contain;
+}
+.nsr-home,
+.nsr-srv,
+.nsr-add {
+position: relative;
+width: 44px;
+height: 44px;
+border-radius: 14px;
+border: 1px solid var(--glass-border);
+background: var(--bg-raise);
+color: var(--text-muted);
+cursor: pointer;
+display: grid;
+place-items: center;
+flex-shrink: 0;
+font: 600 15px var(--font);
+overflow: hidden;
+transition: border-radius 0.2s var(--animation-easing);
+}
+.nsr-srv img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+}
+.nsr-home:hover,
+.nsr-srv:hover {
+border-radius: 50%;
+}
+.nsr-home.active,
+.nsr-srv.active {
+border-radius: 50%;
+outline: 2px solid var(--text);
+}
+.nsr-home.active::before,
+.nsr-srv.active::before {
+content: " ";
+position: absolute;
+left: -14px;
+top: 25%;
+bottom: 25%;
+width: 4px;
+border-radius: 2px;
+background: var(--text);
+}
+.nsr-add {
+color: var(--text);
+border-style: dashed;
+position: sticky;
+bottom: 0;
+background: var(--bg-panel);
+}
+.nsr-sep {
+width: 32px;
+height: 1px;
+background: var(--glass-border);
+flex-shrink: 0;
+}
+#ns-rail {
+position: fixed;
+left: var(--server-rail-w);
+top: 0;
+bottom: 0;
+width: var(--rail-w);
+background: var(--bg-panel);
+backdrop-filter: blur(14px);
+-webkit-backdrop-filter: blur(14px);
+border-right: 1px solid var(--glass-border);
+z-index: 910;
+display: flex;
+flex-direction: column;
+padding: 12px 8px;
+gap: 8px;
+overflow-y: auto;
+overflow-x: hidden;
+transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#ns-rail.open {
+width: 236px;
+align-items: stretch;
+}
+#ns-rail:not(.open) {
+align-items: center;
+}
+.ns-head {
+display: flex;
+align-items: center;
+gap: 10px;
+min-height: 42px;
+height: 42px;
+justify-content: center;
+width: 44px;
+flex-shrink: 0;
+}
+#ns-rail.open .ns-head {
+justify-content: flex-start;
+width: auto;
+}
+.ns-head img {
+width: 38px;
+height: 38px;
+border-radius: 12px;
+flex-shrink: 0;
+}
+.ns-head b {
+display: none;
+font: 600 15px var(--font);
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+color: var(--text);
+}
+#ns-rail.open .ns-head b {
+display: block;
+}
+.ns-pin {
+margin-left: auto;
+width: 26px;
+height: 26px;
+border-radius: 8px;
+border: 1px solid var(--glass-border);
+background: var(--bg-raise);
+color: var(--text-muted);
+cursor: pointer;
+display: none;
+place-items: center;
+flex-shrink: 0;
+}
+#ns-rail.open .ns-pin {
+display: grid;
+color: var(--text);
+border-color: var(--glass-border);
+}
+.ns-it {
+position: relative;
+display: flex;
+align-items: center;
+justify-content: center;
+height: 44px;
+width: 44px;
+border-radius: 12px;
+color: var(--text-muted);
+cursor: pointer;
+transition: background 0.15s var(--animation-easing), color 0.15s var(--animation-easing);
+flex-shrink: 0;
+}
+#ns-rail.open .ns-it {
+justify-content: flex-start;
+padding: 10px 12px;
+width: auto;
+}
+.ns-it:hover {
+color: var(--text);
+background: var(--bg-raise);
+}
+.ns-it.active {
+color: var(--text);
+background: var(--bg-raise);
+}
+.ns-it.active::before {
+content: " ";
+position: absolute;
+left: 2px;
+top: 24%;
+bottom: 24%;
+width: 3px;
+border-radius: 2px;
+background: var(--text);
+}
+.ns-lbl {
+position: absolute;
+left: 46px;
+top: 50%;
+transform: translate(-6px, -50%);
+opacity: 0;
+white-space: nowrap;
+transition: opacity 0.2s var(--animation-easing), transform 0.2s var(--animation-easing);
+font-weight: 700;
+font-size: 13px;
+font-family: var(--font);
+color: var(--text);
+pointer-events: none;
+}
+#ns-rail.open .ns-lbl {
+opacity: 1;
+transform: translate(0, -50%);
+}
+.ns-grp {
+display: none;
+font: 600 9px var(--font-mono);
+letter-spacing: 1.2px;
+color: var(--text-muted);
+padding: 10px 12px 4px;
+}
+#ns-rail.open .ns-grp {
+display: block;
+}
+#ns-main {
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+}
+#ns-topbar {
+position: sticky;
+top: 0;
+height: var(--header-height);
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 0 14px;
+background: var(--bg-panel);
+border-bottom: 1px solid var(--glass-border);
+z-index: 800;
+flex-shrink: 0;
+}
+#ns-topbar img {
+max-height: 34px;
+width: auto;
+border-radius: 8px;
+}
+.ns-title {
+font: 700 15px var(--font-heading);
+color: var(--text);
+flex: 1;
+min-width: 0;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.ns-actions {
+display: flex;
+align-items: center;
+gap: 8px;
+flex-shrink: 0;
+}
+#page-root {
+flex: 1;
+padding: 16px;
+min-width: 0;
+}
+#ns-dock {
+position: fixed;
+left: 0;
+right: 0;
+bottom: 0;
+z-index: 950;
+display: none;
+justify-content: space-around;
+align-items: flex-end;
+background: var(--bg-panel);
+border-top: 1px solid var(--glass-border);
+padding: 14px 6px calc(12px + env(safe-area-inset-bottom));
+}
+#ns-dock a {
+position: relative;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 5px;
+color: var(--text-muted);
+font-size: 10px;
+font-weight: 700;
+font-family: var(--font);
+text-decoration: none;
+transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s var(--animation-easing);
+transform-origin: bottom center;
+-webkit-touch-callout: none;
+user-select: none;
+}
+#ns-dock a .ns-bump {
+display: none;
+position: absolute;
+top: -26px;
+left: 50%;
+transform: translateX(-50%);
+width: 52px;
+height: 52px;
+border-radius: 50%;
+background: var(--bg-panel);
+}
+#ns-dock a .ns-bump::before,
+#ns-dock a .ns-bump::after {
+content: " ";
+position: absolute;
+bottom: 0;
+width: 12px;
+height: 12px;
+background: transparent;
+}
+#ns-dock a .ns-bump::before {
+left: -11px;
+border-bottom-right-radius: 10px;
+box-shadow: 4px 4px 0 var(--bg-panel);
+}
+#ns-dock a .ns-bump::after {
+right: -11px;
+border-bottom-left-radius: 10px;
+box-shadow: -4px 4px 0 var(--bg-panel);
+}
+#ns-dock a.active {
+color: var(--text);
+transform: translateY(-4px);
+}
+#ns-dock a.active .ns-bump {
+display: block;
+}
+#ns-dock a.active svg {
+transform: translateY(-24px);
+color: var(--text);
+}
+#ns-dock a.active span {
+color: var(--text);
+}
+#ns-dock a.near {
+transform: translateY(-4px) scale(1.1);
+}
+#ns-sheet {
+position: fixed;
+left: 0;
+right: 0;
+bottom: 0;
+z-index: 960;
+background: var(--bg-card);
+border-top: 1px solid var(--glass-border);
+border-radius: 20px 20px 0 0;
+max-height: 70vh;
+overflow-y: auto;
+display: none;
+flex-direction: column;
+padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
+}
+#ns-sheet.show {
+display: flex;
+}
+.nsh-bar {
+width: 44px;
+height: 4px;
+border-radius: 2px;
+background: var(--glass-border);
+margin: 0 auto 12px;
+}
+.nsh-grp {
+font: 600 9px var(--font-mono);
+letter-spacing: 1.2px;
+color: var(--text-muted);
+padding: 10px 4px 4px;
+}
+.nsh-it {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 12px 8px;
+border-radius: 12px;
+color: var(--text);
+font-weight: 700;
+font-size: 14px;
+font-family: var(--font);
+cursor: pointer;
+}
+.nsh-it svg {
+color: var(--text-muted);
+}
+.nsh-it.nsh-active {
+background: var(--bg-raise);
+color: var(--text);
+}
+.nsh-it.nsh-active svg {
+color: var(--text);
+}
+#ns-sheet-backdrop {
+position: fixed;
+inset: 0;
+z-index: 955;
+background: transparent;
+display: none;
+}
+#ns-sheet-backdrop.show {
+display: block;
+}
+body.ns-hide #ns-server-rail,
+body.ns-hide #ns-rail,
+body.ns-hide #ns-dock,
+body.ns-hide #ns-sheet,
+body.ns-hide #ns-topbar {
+display: none !important;
+}
+@media (max-width: 900px) {
+#ns-server-rail, #ns-rail {
+display: none !important;
+}
+#ns-dock {
+display: flex;
+}
+body.ns-hide #ns-dock {
+display: none !important;
+}
+#page-root {
+padding-bottom: calc(96px + env(safe-area-inset-bottom));
+}
+}
+@media (min-width: 901px) {
+#ns-dock {
+display: none !important;
+}
+#ns-sheet {
+display: none !important;
+}
+}
