@@ -4,7 +4,7 @@ const os = require('os');
 const { spawn } = require('child_process');
 const { Readable } = require('stream');
 const { Buffer } = require('buffer');
-const { ChannelType } = require('discord.js');
+const { ChannelType, ActivityType, Routes } = require('discord.js');
 const {
   joinVoiceChannel,
   createAudioPlayer,
@@ -65,9 +65,10 @@ function ensureVoiceStateBridge() {
 }
 
 
-function fail(socket, message, retryAfter) {
+function fail(socket, message, retryAfter, code) {
   const payload = { message: message };
   if (retryAfter) payload.retry_after = retryAfter;
+  if (code) payload.code = code;
   socket.emit('error', payload);
 }
 function limit(socket, key, max, refill) {
@@ -284,36 +285,276 @@ async function onFetchChat(socket, data) {
   }
 }
 
+const VOICE_MESSAGE_FLAG = 8192;
+const VOICE_INPUT_EXTENSIONS = /\.(mp3|ogg|opus|wav|m4a|aac|flac|webm|mp4)$/i;
+
+function runAudioProcess(args, timeoutMs = 30000) {
+  return new Promise((resolve, reject) => {
+    let ffmpegPath = 'ffmpeg';
+
+    try {
+      const bundledFFmpeg = require('ffmpeg-static');
+      if (bundledFFmpeg && fs.existsSync(bundledFFmpeg)) {
+        ffmpegPath = bundledFFmpeg;
+      }
+    } catch (e) {}
+
+    let settled = false;
+
+    const finish = (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+
+      if (error) reject(error);
+      else resolve();
+    };
+
+    const ff = spawn(ffmpegPath, args, { stdio: 'ignore' });
+
+    const timer = setTimeout(() => {
+      ff.kill('SIGKILL');
+      finish(new Error('Audio processing timeout'));
+    }, timeoutMs);
+
+    ff.on('error', (err) => {
+      if (err.code === 'ENOENT') {
+        err.code = 'FFMPEG_MISSING';
+        err.message = 'FFmpeg is not available in this workspace.';
+      }
+
+      finish(err);
+    });
+
+    ff.on('close', (code) => {
+      if (code === 0) {
+        finish();
+      } else {
+        finish(new Error('FFmpeg exited with code ' + code));
+      }
+    });
+  });
+}
+
+function buildVoiceWaveform(pcm) {
+  const sampleCount = Math.floor(pcm.length / 2);
+  if (!sampleCount) throw new Error('Empty PCM audio');
+
+  const bins = 256;
+  const amplitudes = new Float64Array(bins);
+  let peak = 0;
+
+  for (let bin = 0; bin < bins; bin++) {
+    const start = Math.floor(bin * sampleCount / bins);
+    const end = Math.max(start + 1, Math.floor((bin + 1) * sampleCount / bins));
+    let sum = 0;
+    let count = 0;
+
+    for (let i = start; i < Math.min(end, sampleCount); i++) {
+      const sample = pcm.readInt16LE(i * 2) / 32768;
+      sum += sample * sample;
+      count++;
+    }
+
+    const rms = count ? Math.sqrt(sum / count) : 0;
+    amplitudes[bin] = rms;
+    if (rms > peak) peak = rms;
+  }
+
+  const waveform = Buffer.alloc(bins);
+  for (let i = 0; i < bins; i++) {
+    waveform[i] = peak ? Math.round(amplitudes[i] / peak * 255) : 0;
+  }
+
+  return waveform.toString('base64');
+}
+
+async function prepareVoiceMessage(raw, originalFilename) {
+  const tempId = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const inputPath = path.join(os.tmpdir(), `ark_vm_${tempId}.input`);
+  const oggPath = path.join(os.tmpdir(), `ark_vm_${tempId}.ogg`);
+  const pcmPath = path.join(os.tmpdir(), `ark_vm_${tempId}.pcm`);
+
+  try {
+    fs.writeFileSync(inputPath, raw);
+
+    await runAudioProcess([
+      '-y', '-nostdin', '-hide_banner', '-loglevel', 'error',
+      '-i', inputPath, '-vn',
+      '-ac', '1', '-ar', '48000',
+      '-c:a', 'libopus', '-b:a', '32k',
+      '-vbr', 'off', '-application', 'voip',
+      oggPath
+    ]);
+
+    await runAudioProcess([
+      '-y', '-nostdin', '-hide_banner', '-loglevel', 'error',
+      '-i', inputPath, '-vn',
+      '-ac', '1', '-ar', '48000',
+      '-f', 's16le', pcmPath
+    ]);
+
+    const ogg = fs.readFileSync(oggPath);
+    const pcm = fs.readFileSync(pcmPath);
+
+    if (!ogg.length || !pcm.length) throw new Error('Audio conversion produced no data');
+
+    const duration = pcm.length / (48000 * 2);
+    if (!Number.isFinite(duration) || duration <= 0) {
+      throw new Error('Invalid audio duration');
+    }
+
+    return {
+      data: ogg,
+      filename: 'voice-message.ogg',
+      duration,
+      waveform: buildVoiceWaveform(pcm)
+    };
+  } finally {
+    for (const file of [inputPath, oggPath, pcmPath]) {
+      try { fs.unlinkSync(file); } catch (e) {}
+    }
+  }
+}
+
 async function onSendChatMessage(socket, data) {
   const bot = getBot();
-  if (!bot || !bot.isReady()) { fail(socket, 'Bot not connected'); return; }
+
+  if (!bot || !bot.isReady()) {
+    fail(socket, 'Bot not connected');
+    return;
+  }
+
   const channelId = data.channel_id;
   const content = data.content || '';
   const replyTo = data.reply_to;
   const attachments = data.attachments || [];
-  if (!validateId(channelId) || !(validateMessageContent(content) || attachments.length > 0)) { fail(socket, 'Invalid channel or content'); return; }
+  const voiceRequested = data.voice_message === true;
+
+  if (!validateId(channelId) || !(validateMessageContent(content) || attachments.length > 0)) {
+    fail(socket, 'Invalid channel or content');
+    return;
+  }
+
+  if (voiceRequested && (
+    content.trim() ||
+    data.tts ||
+    attachments.length !== 1 ||
+    !VOICE_INPUT_EXTENSIONS.test(attachments[0].filename || '')
+  )) {
+    fail(socket, 'Invalid native voice message');
+    return;
+  }
+
   if (!limit(socket, `send:${socket.id}`, 5, 5)) return;
+
   const channel = bot.channels.cache.get(channelId);
   if (!channel) return;
+
   try {
-    const messagePayload = {};
-    if (content) messagePayload.content = content;
-    if (data.tts) messagePayload.tts = true;
-    if (attachments.length > 0) {
-      messagePayload.files = attachments.map(att => ({
-        attachment: Buffer.from(att.data, 'base64'),
-        name: att.filename
-      }));
-    }
-    if (replyTo && validateId(replyTo)) {
+    const replyReference = replyTo && validateId(replyTo)
+      ? {
+          message_id: replyTo,
+          channel_id: channelId,
+          fail_if_not_exists: false
+        }
+      : undefined;
+
+    const replyMessage = replyTo && validateId(replyTo)
+      ? await channel.messages.fetch(replyTo).catch(() => null)
+      : null;
+
+    let sent = null;
+    let voiceApiAccepted = false;
+
+    if (voiceRequested) {
+      const original = Buffer.from(attachments[0].data || '', 'base64');
+
       try {
-        const referenced = await channel.messages.fetch(replyTo);
-        messagePayload.reply = { messageReference: referenced };
-      } catch (e) {}
+        const preparedVoice = await prepareVoiceMessage(
+          original,
+          attachments[0].filename
+        );
+
+        const payload = {
+          flags: VOICE_MESSAGE_FLAG,
+          attachments: [{
+            id: 0,
+            filename: preparedVoice.filename,
+            duration_secs: preparedVoice.duration,
+            waveform: preparedVoice.waveform
+          }]
+        };
+
+        if (replyReference) payload.message_reference = replyReference;
+
+        const result = await bot.rest.post(
+          Routes.channelMessages(channelId),
+          {
+            body: payload,
+            files: [{
+              name: preparedVoice.filename,
+              data: preparedVoice.data,
+              contentType: 'audio/ogg',
+              key: 'files[0]'
+            }]
+          }
+        );
+
+        voiceApiAccepted = true;
+        sent = await channel.messages.fetch(result.id);
+      } catch (voiceError) {
+        if (voiceApiAccepted) {
+          logger.error('Voice message sent but message fetch failed: ' + voiceError.message);
+          fail(socket, 'Voice message sent, but failed to refresh the message');
+          return;
+        }
+
+        logger.error('Voice message failed: ' + voiceError.message);
+
+        if (voiceError.code === 'FFMPEG_MISSING') {
+          fail(
+            socket,
+            'FFmpeg is not currently available in your workspace.',
+            null,
+            'FFMPEG_MISSING'
+          );
+        } else {
+          fail(socket, 'Failed to send native voice message');
+        }
+
+        return;
+      }
+    } else {
+      const messagePayload = {};
+
+      if (content) messagePayload.content = content;
+      if (data.tts) messagePayload.tts = true;
+
+      if (attachments.length > 0) {
+        messagePayload.files = attachments.map(att => ({
+          attachment: Buffer.from(att.data, 'base64'),
+          name: att.filename
+        }));
+      }
+
+      if (replyMessage) {
+        messagePayload.reply = { messageReference: replyMessage };
+      }
+
+      sent = await channel.send(messagePayload);
     }
-    const sent = await channel.send(messagePayload);
+
+    if (!sent) return;
+
     const rendered = await renderMessage(sent.content, sent.guild, bot);
-    const reactions = sent.reactions.cache.map(r => ({ emoji_name: String(r.emoji), count: r.count, emoji_id: r.emoji.id ? String(r.emoji.id) : null, me: !!r.me }));
+    const reactions = sent.reactions.cache.map(r => ({
+      emoji_name: String(r.emoji),
+      count: r.count,
+      emoji_id: r.emoji.id ? String(r.emoji.id) : null,
+      me: !!r.me
+    }));
+
     io.emit('new_chat_message', {
       channel_id: String(sent.channel.id),
       author_id: String(sent.author.id),
@@ -324,49 +565,177 @@ async function onSendChatMessage(socket, data) {
       segments: rendered,
       timestamp: sent.createdAt.toTimeString().slice(0, 8),
       id: String(sent.id),
-      attachments: sent.attachments.map(att => ({ url: att.url, filename: att.filename, type: classifyAttachment(att), size: att.size })),
+      attachments: sent.attachments.map(att => ({
+        url: att.url,
+        filename: att.filename,
+        type: classifyAttachment(att),
+        size: att.size
+      })),
       embeds: sent.embeds.map(embedToDict),
-      stickers: (sent.stickers || []).map(s => s.url ? { url: s.url, filename: s.name } : null).filter(Boolean),
+      stickers: (sent.stickers || []).map(s => s.url ? {
+        url: s.url,
+        filename: s.name
+      } : null).filter(Boolean),
       reactions,
-      reply_to: sent.reference && sent.reference.messageId ? String(sent.reference.messageId) : null,
+      reply_to: sent.reference && sent.reference.messageId
+        ? String(sent.reference.messageId)
+        : null,
       edited: false
     });
   } catch (e) {
-    if (e.code === 50013) fail(socket, 'Missing permission to send messages');
-    else { logger.error(`Failed to send message: ${e.message}`); fail(socket, 'Failed to send message'); }
+    if (e.code === 50013) {
+      fail(socket, 'Missing permission to send messages');
+    } else {
+      logger.error(`Failed to send message: ${e.message}`);
+      fail(socket, 'Failed to send message');
+    }
   }
 }
 
 async function onSendDmMessage(socket, data) {
   const bot = getBot();
-  if (!bot || !bot.isReady()) { fail(socket, 'Bot not connected'); return; }
+
+  if (!bot || !bot.isReady()) {
+    fail(socket, 'Bot not connected');
+    return;
+  }
+
   const channelId = data.channel_id;
   const content = data.content || '';
   const replyTo = data.reply_to;
   const attachments = data.attachments || [];
-  if (!validateId(channelId) || !(validateMessageContent(content) || attachments.length > 0)) { fail(socket, 'Invalid channel or content'); return; }
+  const voiceRequested = data.voice_message === true;
+
+  if (!validateId(channelId) || !(validateMessageContent(content) || attachments.length > 0)) {
+    fail(socket, 'Invalid channel or content');
+    return;
+  }
+
+  if (voiceRequested && (
+    content.trim() ||
+    data.tts ||
+    attachments.length !== 1 ||
+    !VOICE_INPUT_EXTENSIONS.test(attachments[0].filename || '')
+  )) {
+    fail(socket, 'Invalid native voice message');
+    return;
+  }
+
   if (!limit(socket, `send:${socket.id}`, 5, 5)) return;
+
   const channel = bot.channels.cache.get(channelId);
   if (!channel) return;
+
   try {
-    const messagePayload = {};
-    if (content) messagePayload.content = content;
-    if (data.tts) messagePayload.tts = true;
-    if (attachments.length > 0) {
-      messagePayload.files = attachments.map(att => ({
-        attachment: Buffer.from(att.data, 'base64'),
-        name: att.filename
-      }));
-    }
+    let replyMessage = null;
+
     if (replyTo && validateId(replyTo)) {
-      try {
-        const referenced = await channel.messages.fetch(replyTo);
-        messagePayload.reply = { messageReference: referenced };
-      } catch (e) {}
+      replyMessage = await channel.messages.fetch(replyTo).catch(() => null);
     }
-    const sent = await channel.send(messagePayload);
+
+    let sent = null;
+    let voiceApiAccepted = false;
+
+    if (voiceRequested) {
+      const original = Buffer.from(attachments[0].data || '', 'base64');
+
+      try {
+        const preparedVoice = await prepareVoiceMessage(
+          original,
+          attachments[0].filename
+        );
+
+        const payload = {
+          flags: VOICE_MESSAGE_FLAG,
+          attachments: [{
+            id: 0,
+            filename: preparedVoice.filename,
+            duration_secs: preparedVoice.duration,
+            waveform: preparedVoice.waveform
+          }]
+        };
+
+        if (replyMessage) {
+          payload.message_reference = {
+            message_id: replyMessage.id,
+            channel_id: channelId,
+            fail_if_not_exists: false
+          };
+        }
+
+        const result = await bot.rest.post(
+          Routes.channelMessages(channelId),
+          {
+            body: payload,
+            files: [{
+              name: preparedVoice.filename,
+              data: preparedVoice.data,
+              contentType: 'audio/ogg',
+              key: 'files[0]'
+            }]
+          }
+        );
+
+        voiceApiAccepted = true;
+        sent = await channel.messages.fetch(result.id);
+      } catch (voiceError) {
+        if (voiceApiAccepted) {
+          logger.error(
+            'DM voice message sent but message fetch failed: ' +
+            voiceError.message
+          );
+          fail(socket, 'Voice message sent, but failed to refresh the message');
+          return;
+        }
+
+        logger.error('DM voice message failed: ' + voiceError.message);
+
+        if (voiceError.code === 'FFMPEG_MISSING') {
+          fail(
+            socket,
+            'FFmpeg is not currently available in your workspace.',
+            null,
+            'FFMPEG_MISSING'
+          );
+        } else {
+          fail(socket, 'Failed to send native voice message');
+        }
+
+        return;
+      }
+    } else {
+      const messagePayload = {};
+
+      if (content) messagePayload.content = content;
+      if (data.tts) messagePayload.tts = true;
+
+      if (attachments.length > 0) {
+        messagePayload.files = attachments.map(att => ({
+          attachment: Buffer.from(att.data, 'base64'),
+          name: att.filename
+        }));
+      }
+
+      if (replyMessage) {
+        messagePayload.reply = {
+          messageReference: replyMessage
+        };
+      }
+
+      sent = await channel.send(messagePayload);
+    }
+
+    if (!sent) return;
+
     const rendered = await renderMessage(sent.content, null, bot);
-    const reactions = sent.reactions.cache.map(r => ({ emoji_name: String(r.emoji), count: r.count, emoji_id: r.emoji.id ? String(r.emoji.id) : null, me: !!r.me }));
+
+    const reactions = sent.reactions.cache.map(r => ({
+      emoji_name: String(r.emoji),
+      count: r.count,
+      emoji_id: r.emoji.id ? String(r.emoji.id) : null,
+      me: !!r.me
+    }));
+
     io.emit('new_dm_message', {
       channel_id: String(sent.channel.id),
       author_id: String(sent.author.id),
@@ -377,14 +746,27 @@ async function onSendDmMessage(socket, data) {
       segments: rendered,
       timestamp: sent.createdAt.toTimeString().slice(0, 8),
       id: String(sent.id),
-      attachments: sent.attachments.map(att => ({ url: att.url, filename: att.filename, type: classifyAttachment(att), size: att.size })),
+      attachments: sent.attachments.map(att => ({
+        url: att.url,
+        filename: att.filename,
+        type: classifyAttachment(att),
+        size: att.size
+      })),
       embeds: sent.embeds.map(embedToDict),
-      stickers: (sent.stickers || []).map(s => s.url ? { url: s.url, filename: s.name } : null).filter(Boolean),
+      stickers: (sent.stickers || []).map(s =>
+        s.url
+          ? { url: s.url, filename: s.name }
+          : null
+      ).filter(Boolean),
       reactions
     });
   } catch (e) {
-    if (e.code === 50013) fail(socket, 'Missing permission to send messages');
-    else { logger.error(`Failed to send DM: ${e.message}`); fail(socket, 'Failed to send message'); }
+    if (e.code === 50013) {
+      fail(socket, 'Missing permission to send messages');
+    } else {
+      logger.error(`Failed to send DM: ${e.message}`);
+      fail(socket, 'Failed to send message');
+    }
   }
 }
 
@@ -660,26 +1042,63 @@ async function onResolveInvite(socket, data) {
 }
 
 async function onTranscodeAudio(socket, data) {
+  const tmp = os.tmpdir();
+  const id = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const inP = path.join(tmp, `ark_vm_${id}.webm`);
+  const outP = path.join(tmp, `ark_vm_${id}.mp3`);
+
   try {
     const raw = Buffer.from(data.data || '', 'base64');
-    if (!raw.length) { socket.emit('audio_transcoded', { ok: false }); return; }
-    const tmp = os.tmpdir();
-    const inP = path.join(tmp, `ark_vm_${Date.now()}.webm`);
-    const outP = path.join(tmp, `ark_vm_${Date.now()}.mp3`);
+
+    if (!raw.length) {
+      socket.emit('audio_transcoded', {
+        ok: false,
+        message: 'No audio data received'
+      });
+      return;
+    }
+
     fs.writeFileSync(inP, raw);
-    await new Promise((res, rej) => {
-      const ff = spawn('ffmpeg', ['-y', '-i', inP, '-vn', '-codec:a', 'libmp3lame', '-q:a', '2', outP], { stdio: 'ignore' });
-      const t = setTimeout(() => { ff.kill('SIGKILL'); rej(new Error('timeout')); }, 30000);
-      ff.on('close', (c) => { clearTimeout(t); c === 0 ? res() : rej(new Error('ff ' + c)); });
-      ff.on('error', (e) => { clearTimeout(t); rej(e); });
-    });
+
+    await runAudioProcess([
+      '-y',
+      '-nostdin',
+      '-hide_banner',
+      '-loglevel', 'error',
+      '-i', inP,
+      '-vn',
+      '-codec:a', 'libmp3lame',
+      '-q:a', '2',
+      outP
+    ]);
+
     const mp3 = fs.readFileSync(outP);
-    socket.emit('audio_transcoded', { ok: true, data: mp3.toString('base64'), filename: String(data.filename || 'voicemail').replace(/\.\w+$/, '') + '.mp3' });
-    try { fs.unlinkSync(inP); } catch (e) {}
-    try { fs.unlinkSync(outP); } catch (e) {}
+
+    socket.emit('audio_transcoded', {
+      ok: true,
+      data: mp3.toString('base64'),
+      filename: String(data.filename || 'voicemail').replace(/\.\w+$/, '') + '.mp3'
+    });
   } catch (e) {
     logger.error('transcode_audio: ' + e.message);
-    socket.emit('audio_transcoded', { ok: false });
+
+    if (e.code === 'FFMPEG_MISSING') {
+      fail(
+        socket,
+        'FFmpeg is not currently available in your workspace.',
+        null,
+        'FFMPEG_MISSING'
+      );
+    }
+
+    socket.emit('audio_transcoded', {
+      ok: false,
+      code: e.code || 'AUDIO_TRANSCODE_FAILED',
+      message: e.message
+    });
+  } finally {
+    try { fs.unlinkSync(inP); } catch (e) {}
+    try { fs.unlinkSync(outP); } catch (e) {}
   }
 }
 

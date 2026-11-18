@@ -3,6 +3,11 @@
   var dmIndex = {};
   var currentDm = null;
   var wired = false;
+  var mediaRec = null;
+  var recStream = null;
+  var recChunks = [];
+  var recTimer = null;
+  var recPreviewUrl = null;
   var TOUCH = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || ('ontouchstart' in window);
 
   function el(id) { return document.getElementById(id); }
@@ -58,6 +63,125 @@
     inp.value = '';
   }
 
+  function stopRecording() {
+    if (mediaRec && mediaRec.state === 'recording') mediaRec.stop();
+  }
+
+function sendRecording(blob, targetDm) {
+  if (!targetDm || !blob || !blob.size) return;
+
+  var reader = new FileReader();
+
+  reader.onload = function (ev) {
+    var data = ev.target.result.split(',')[1];
+
+    Session.socket.emit('send_dm_message', {
+      channel_id: targetDm,
+      content: '',
+      voice_message: true,
+      attachments: [{
+        filename: 'voice-message-' + Date.now() + '.webm',
+        data: data
+      }]
+    });
+  };
+
+  reader.readAsDataURL(blob);
+}
+
+  function removeRecPreview() {
+    var preview = el('dms-rec-preview');
+    if (preview) preview.remove();
+    if (recPreviewUrl) {
+      URL.revokeObjectURL(recPreviewUrl);
+      recPreviewUrl = null;
+    }
+  }
+
+  function showRecPreview(blob, targetDm) {
+    var wrap = document.querySelector('.dms-main .chat-input-wrap');
+    if (!wrap) return;
+
+    removeRecPreview();
+    recPreviewUrl = URL.createObjectURL(blob);
+
+    var div = document.createElement('div');
+    div.id = 'dms-rec-preview';
+    div.className = 'rec-preview';
+    div.innerHTML =
+      '<audio controls src="' + recPreviewUrl + '"></audio>' +
+      '<div class="rec-actions">' +
+      '<button class="primary-btn" data-drec="send" type="button">Send VM</button>' +
+      '<button class="danger-btn" data-drec="drop" type="button">Discard</button>' +
+      '</div>';
+
+    wrap.insertBefore(div, wrap.querySelector('.chat-input-row'));
+
+    div.querySelector('[data-drec="send"]').onclick = function () {
+      sendRecording(blob, targetDm);
+      removeRecPreview();
+    };
+
+    div.querySelector('[data-drec="drop"]').onclick = removeRecPreview;
+  }
+
+  function toggleVoice() {
+    var btn = el('dms-voice');
+    var recordingDm = currentDm;
+
+    if (mediaRec && mediaRec.state === 'recording') {
+      stopRecording();
+      return;
+    }
+
+    if (!navigator.mediaDevices || !window.MediaRecorder) {
+      if (window.arkToast) arkToast('Voice recording is not supported on this device');
+      return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      recStream = stream;
+      recChunks = [];
+
+      mediaRec = new MediaRecorder(stream);
+      mediaRec.ondataavailable = function (e) {
+        if (e.data && e.data.size) recChunks.push(e.data);
+      };
+
+      mediaRec.onstop = function () {
+        stream.getTracks().forEach(function (tr) { tr.stop(); });
+        recStream = null;
+        clearTimeout(recTimer);
+
+        if (btn) {
+          btn.classList.remove('recording');
+          btn.innerHTML = arkIcon('mic', 16);
+          btn.title = 'Record voice message';
+        }
+
+        var blob = new Blob(recChunks, {
+          type: mediaRec.mimeType || 'audio/webm'
+        });
+
+        mediaRec = null;
+        if (blob.size) showRecPreview(blob, recordingDm);
+      };
+
+      mediaRec.start();
+
+      if (btn) {
+        btn.classList.add('recording');
+        btn.innerHTML = arkIcon('square', 16);
+        btn.title = 'Stop recording';
+      }
+
+      var limit = ((window.State && State.get('chat.vmLimit', 60)) || 60) * 1000;
+      recTimer = setTimeout(stopRecording, limit);
+    }).catch(function () {
+      if (window.arkToast) arkToast('Microphone permission denied or unavailable');
+    });
+  }
+
   function loadDm(cid) {
     currentDm = cid;
     State.set('session.dmPage', cid);
@@ -80,8 +204,9 @@
       '<div class="dms-main">' +
       '<div class="dms-top"><button id="dms-back" class="secondary-btn" type="button">‹ Back</button><span id="dms-who" class="dms-who"></span></div>' +
       '<div class="dms-msgs" id="dms-msgs"></div>' +
-      '<div class="chat-input-wrap"><div class="chat-input-row"><textarea id="dms-input" rows="1" placeholder="Message..."></textarea><button class="primary-btn" id="dms-send">' + arkIcon('send', 16) + '</button></div></div>' +
+      '<div class="chat-input-wrap"><div class="chat-input-row"><textarea id="dms-input" rows="1" placeholder="Message..."></textarea><button class="secondary-btn" id="dms-voice" type="button" title="Record voice message">' + arkIcon('mic', 16) + '</button><button class="primary-btn" id="dms-send">' + arkIcon('send', 16) + '</button></div></div>' +
       '</div></div>';
+
     if (!wired) {
       wired = true;
       Session.on('dm_list', function (dms) { renderList(dms); });
@@ -95,18 +220,30 @@
       });
       Session.on('dm_opened', function (d) { Router.go('/dms/' + d.channel_id); });
     }
+
     on('dms-list', 'click', function (e) {
       var it = e.target.closest('[data-dm]');
       if (it) loadDm(it.getAttribute('data-dm'));
     });
-    click('dms-back', function () { var lay = el('dms-layout'); if (lay) lay.classList.remove('dm-open'); });
+
+    click('dms-back', function () {
+      var lay = el('dms-layout');
+      if (lay) lay.classList.remove('dm-open');
+    });
+
     click('dms-send', sendDm);
+    click('dms-voice', toggleVoice);
+
     on('dms-input', 'keydown', function (e) {
       if (e.key === 'Enter' && !TOUCH) { e.preventDefault(); sendDm(); }
     });
+
     Session.socket.emit('run_command', { cmd: 'dm_list', params: {} });
     if (params.cid) loadDm(params.cid);
-    else { var last = State.get('session.dmPage', ''); if (last) loadDm(last); }
+    else {
+      var last = State.get('session.dmPage', '');
+      if (last) loadDm(last);
+    }
   }
 
   Router.add('/dms/:cid?', page, { guard: 'auth', css: ['chat.css'] });

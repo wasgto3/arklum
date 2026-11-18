@@ -1452,29 +1452,102 @@ function stopRecording() {
 }
 
 function sendRecording(blob, tts) {
+  if (!blob || !blob.size) return;
+
+  var input = el('chat-input');
+  var content = input
+    ? resolveMentions(expandSlots(input.value.trim()))
+    : '';
+
+  if (!tts && content) {
+    if (window.pushNotification) {
+      window.pushNotification(
+        'Voice message not sent',
+        'Clear the message text before sending a voice message.',
+        'warning'
+      );
+    }
+    return;
+  }
+
   var reader = new FileReader();
+
   reader.onload = function (ev) {
     var b64 = ev.target.result.split(',')[1];
-    var done = false;
-    var finish = function (att) {
-      if (done) return;
-      done = true;
-      var input = el('chat-input');
+    var filename = 'voicemail-' + Date.now();
+
+    var sendMessage = function (attachment, voiceMessage) {
       Session.socket.emit('send_chat_message', {
         channel_id: channelId,
-        content: input ? resolveMentions(expandSlots(input.value.trim())) : '',
-        attachments: [att],
-        tts: !!tts
+        content: tts ? content : '',
+        attachments: [attachment],
+        tts: !!tts,
+        voice_message: !!voiceMessage
       });
-      if (input) { input.value = ''; emojiSlots = []; syncMirror(); updateTypingMode(); }
+
+      if (input) {
+        input.value = '';
+        emojiSlots = [];
+        syncMirror();
+        updateTypingMode();
+      }
     };
-    Session.socket.once('audio_transcoded', function (r) {
-      if (r && r.ok) finish({ filename: r.filename, data: r.data });
-      else finish({ filename: 'voicemail-' + Date.now() + '.webm', data: b64 });
+
+    if (!tts) {
+      sendMessage({
+        filename: filename + '.webm',
+        data: b64
+      }, true);
+
+      return;
+    }
+
+    var settled = false;
+
+    Session.socket.once('audio_transcoded', function (result) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+
+      if (!result || !result.ok) {
+        if (
+          (!result || result.code !== 'FFMPEG_MISSING') &&
+          window.pushNotification
+        ) {
+          window.pushNotification(
+            'Audio conversion failed',
+            'The recording could not be converted. Nothing was sent.',
+            'error'
+          );
+        }
+        return;
+      }
+
+      sendMessage({
+        filename: result.filename,
+        data: result.data
+      }, false);
     });
-    Session.socket.emit('transcode_audio', { data: b64, filename: 'voicemail-' + Date.now() });
-    setTimeout(function () { finish({ filename: 'voicemail-' + Date.now() + '.webm', data: b64 }); }, 8000);
+
+    var timer = setTimeout(function () {
+      if (settled) return;
+      settled = true;
+
+      if (window.pushNotification) {
+        window.pushNotification(
+          'Audio conversion timed out',
+          'Nothing was sent. Please try again.',
+          'error'
+        );
+      }
+    }, 35000);
+
+    Session.socket.emit('transcode_audio', {
+      data: b64,
+      filename: filename
+    });
   };
+
   reader.readAsDataURL(blob);
 }
 
